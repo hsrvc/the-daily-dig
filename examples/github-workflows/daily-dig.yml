@@ -1,0 +1,153 @@
+name: Daily Dig
+
+on:
+  # Backup cron — fires at 06:00 UTC (14:00 TPE), well after all launchd retry
+  # slots (08:30–13:30 TPE). A "skip if already done" step checks for today's
+  # seen file; if launchd ran first the workflow exits immediately at that step.
+  schedule:
+    - cron: '0 4 * * *'  # 12:00 TPE — backup only, skips if launchd already ran
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Posts per page to scrape (default 10 — bump to 20+ to backfill a missed run)'
+        required: false
+        default: '10'
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write       # so the agent can push commits back to main
+      issues: write         # so failure() step can open a tracking issue
+    env:
+      TZ: Asia/Taipei
+      SCRAPE_LIMIT: ${{ inputs.limit || '10' }}
+      APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+      SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+      SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+      SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+      SPOTIFY_PLAYLIST_ID: ${{ secrets.SPOTIFY_PLAYLIST_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # full history so commits can be pushed cleanly
+
+      - name: Check what needs to run today
+        id: check
+        run: |
+          TODAY=$(TZ=Asia/Taipei date '+%Y-%m-%d')
+          PIPELINE_DONE=false
+          SPOTIFY_DONE=false
+          EMAIL_DONE=false
+          [ -f "data/seen/$TODAY.json" ]           && PIPELINE_DONE=true
+          [ -f "data/notified/spotify-$TODAY" ]    && SPOTIFY_DONE=true
+          [ -f "data/notified/email-$TODAY" ]      && EMAIL_DONE=true
+          echo "pipeline_done=$PIPELINE_DONE"   >> $GITHUB_OUTPUT
+          echo "spotify_done=$SPOTIFY_DONE"     >> $GITHUB_OUTPUT
+          echo "email_done=$EMAIL_DONE"         >> $GITHUB_OUTPUT
+          echo "Pipeline: $PIPELINE_DONE | Spotify: $SPOTIFY_DONE | Email: $EMAIL_DONE"
+
+      - name: Setup Node
+        if: steps.check.outputs.pipeline_done != 'true' || steps.check.outputs.spotify_done != 'true' || steps.check.outputs.email_done != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Python
+        if: steps.check.outputs.pipeline_done != 'true' || steps.check.outputs.spotify_done != 'true' || steps.check.outputs.email_done != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        if: steps.check.outputs.pipeline_done != 'true' || steps.check.outputs.spotify_done != 'true' || steps.check.outputs.email_done != 'true'
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pyyaml
+
+      - name: Install global CLIs
+        if: steps.check.outputs.pipeline_done != 'true'
+        run: npm i -g @anthropic-ai/claude-code wrangler apify-cli
+
+      - name: Configure git
+        if: steps.check.outputs.pipeline_done != 'true' || steps.check.outputs.spotify_done != 'true' || steps.check.outputs.email_done != 'true'
+        run: |
+          git config user.name "Daily Dig Bot"
+          git config user.email "noreply@anthropic.com"
+
+      - name: Run pipeline via daily-dig skill
+        id: pipeline
+        if: steps.check.outputs.pipeline_done != 'true'
+        run: |
+          claude --dangerously-skip-permissions -p \
+            "Use the daily-dig skill to run today's pipeline end-to-end. Today is $(date +%Y-%m-%d). SCRAPE_LIMIT=$SCRAPE_LIMIT is set in env — pass it via --limit to scrape_apify.py. Report a one-paragraph summary at the end."
+
+      - name: Commit digest safety net
+        if: steps.pipeline.outcome == 'success'
+        run: |
+          git add data/seen data/parsed site/src/content/digests site/public/covers 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "digest: $(TZ=Asia/Taipei date '+%Y-%m-%d') [GH Actions safety net]"
+          fi
+          git push origin main
+
+      - name: Update Spotify playlist
+        id: spotify
+        if: steps.check.outputs.spotify_done != 'true' && (steps.check.outputs.pipeline_done == 'true' || success())
+        run: python3 scripts/update_spotify.py
+
+      - name: Send digest email
+        id: email
+        if: steps.check.outputs.email_done != 'true' && (steps.check.outputs.pipeline_done == 'true' || success())
+        run: python3 scripts/send_email.py
+
+      - name: Commit notified markers
+        if: always() && (steps.spotify.outcome == 'success' || steps.email.outcome == 'success')
+        run: |
+          git add data/notified/ data/dig.db 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "notified: $(TZ=Asia/Taipei date '+%Y-%m-%d') [GH Actions]"
+          fi
+          git push origin main
+
+      - name: Open issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const date = new Date().toISOString().slice(0, 10);
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const failed = [
+              '${{ steps.pipeline.outcome }}' === 'failure' ? '- Pipeline (digest generation + deploy)' : null,
+              '${{ steps.spotify.outcome }}' === 'failure'  ? '- Spotify playlist update' : null,
+              '${{ steps.email.outcome }}' === 'failure'    ? '- Digest email (Resend)' : null,
+            ].filter(Boolean).join('\n') || '- Unknown step';
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Daily Dig failed — ${date}`,
+              body: [
+                `The following steps failed:`,
+                ``,
+                failed,
+                ``,
+                `**Run:** ${runUrl}`,
+                `**Trigger:** ${context.eventName}`,
+                ``,
+                `Re-dispatch via:`,
+                '```',
+                `gh workflow run daily-dig.yml --repo ${context.repo.owner}/${context.repo.repo}`,
+                '```',
+                ``,
+                `If the pipeline committed data already, the next run will skip it and only retry the failed steps.`,
+              ].join('\n'),
+              labels: ['cron-failure'],
+            });

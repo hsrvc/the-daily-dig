@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.erdscribe.daily-dig</string>
+
+    <!-- Script lives in ~/.local/bin so launchd can read it.
+         macOS Privacy blocks launchd-spawned processes from reading ~/Documents.
+         Install with: cp scripts/run_daily_dig.sh ~/.local/bin/ -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/YOUR_USER/.local/bin/run_daily_dig.sh</string>
+    </array>
+
+    <!-- Primary fire at 08:30 plus hourly retries through 13:30 (Asia/Taipei).
+         The script's catch-up guard skips if already ran today, so only the
+         first slot that fires after the Mac wakes actually runs the pipeline. -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>30</integer></dict>
+    </array>
+
+    <!-- Also fire on login/reboot so a restarted Mac catches up immediately. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/YOUR_USER/Library/Logs/daily-dig/launchd.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/YOUR_USER/Library/Logs/daily-dig/launchd.err</string>
+
+    <!-- Throttle: never re-fire within 60s of a previous start. -->
+    <key>ThrottleInterval</key>
+    <integer>60</integer>
+</dict>
+</plist>

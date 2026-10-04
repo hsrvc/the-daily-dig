@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content';
+import Newspaper from '../../layouts/Newspaper.astro';
+import AlbumHero from '../../components/AlbumHero.astro';
+import AlbumStory from '../../components/AlbumStory.astro';
+import { parseAlbums } from '../../lib/parse-albums';
+import { pickHero } from '../../lib/score-hero';
+
+export async function getStaticPaths() {
+  const digests = await getCollection('digests');
+  return digests.map((digest) => {
+    const dateStr = new Date(digest.data.date).toISOString().split('T')[0];
+    return {
+      params: { date: dateStr },
+      props: { digest },
+    };
+  });
+}
+
+const { digest } = Astro.props;
+const albums = parseAlbums(digest.body ?? '');
+const { hero, rest } = pickHero(albums);
+---
+
+<Newspaper title={`${digest.data.title} — ${new Date(digest.data.date).toISOString().split('T')[0]}`} date={digest.data.date}>
+  <nav style="font-size:0.8rem;margin-bottom:1rem;">
+    <a href="/" style="color:var(--color-muted);">&larr; Latest</a>
+    &nbsp;&bull;&nbsp;
+    <a href="/archive" style="color:var(--color-muted);">Archive</a>
+  </nav>
+
+  {hero && <AlbumHero album={hero} />}
+
+  <hr class="section-rule" />
+
+  {rest.length > 0 && (
+    <div class="album-grid">
+      {rest.map((album) => (
+        <AlbumStory album={album} />
+      ))}
+    </div>
+  )}
+
+  <hr class="section-rule" style="margin-bottom:1rem;" />
+
+  <footer style="margin-bottom:0;font-family:var(--font-body);font-size:0.75rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+    <span style="color:var(--color-ink);flex:1;">
+      Sources: {digest.data.sources.map((s: string, i: number) => (
+        <>{i > 0 && ', '}<strong>{s}</strong></>
+      ))}
+    </span>
+<nav style="letter-spacing:0.1em;text-transform:uppercase;color:var(--color-ink);flex:1;text-align:right;">
+      <a href="/archive" style="color:var(--color-ink);text-decoration:none;">Full Archive</a>
+      <span style="margin:0 0.75rem;opacity:0.4;">|</span>
+      <a href="https://open.spotify.com/playlist/3J1jTOlZl8pApDfh4QRXv0" target="_blank" rel="noopener" style="color:var(--color-ink);text-decoration:none;">Listen on Spotify</a>
+    </nav>
+  </footer>
+</Newspaper>

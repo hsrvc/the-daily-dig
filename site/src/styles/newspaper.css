@@ -1,0 +1,266 @@
+/* Newspaper Typography & Layout Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --color-paper: #f5f0e8;
+  --color-ink: #1a1a1a;
+  --color-rule: #333;
+  --color-muted: #666;
+  --font-headline: 'Playfair Display', 'Georgia', serif;
+  --font-body: 'Libre Baskerville', 'Georgia', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-cjk: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Masthead */
+.masthead {
+  text-align: center;
+  border-top: 4px double var(--color-ink);
+  border-bottom: 2px solid var(--color-ink);
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+.masthead h1 {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.masthead .dateline {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--color-muted);
+  margin-top: 0.25rem;
+}
+
+/* Section rules */
+.section-rule {
+  border: none;
+  border-top: 1px solid var(--color-rule);
+  margin: 1.5rem 0;
+}
+
+.section-rule-thick {
+  border: none;
+  border-top: 3px solid var(--color-ink);
+  margin: 1.5rem 0;
+}
+
+/* Album grid */
+.album-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+@media (min-width: 768px) {
+  .album-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.album-grid .album-story {
+  padding: 0 1rem;
+  border-right: 1px solid var(--color-rule);
+}
+
+.album-grid .album-story:nth-child(3n),
+.album-grid .album-story:last-child {
+  border-right: none;
+}
+
+@media (max-width: 767px) {
+  .album-grid .album-story {
+    border-right: none;
+    border-bottom: 1px solid var(--color-rule);
+    padding: 1rem 0;
+  }
+  .album-grid .album-story:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Hero story */
+.hero-story {
+  padding-bottom: 1.5rem;
+  margin-bottom: 0;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr 1.2fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.hero-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-commentary {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+@media (max-width: 768px) {
+  .hero-grid {
+    grid-template-columns: 180px 1fr;
+  }
+  .hero-commentary {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Headlines */
+.headline {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.25rem 0;
+}
+
+.headline-hero {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.headline-story {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+}
+
+/* Subheadline / album name */
+.subheadline {
+  font-family: var(--font-headline);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--color-muted);
+  margin: 0 0 0.5rem 0;
+}
+
+/* Meta tags */
+.meta-tags {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.meta-tag {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  padding: 0.1rem 0.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.meta-detail {
+  white-space: nowrap;
+}
+
+/* Body text */
+.story-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
+
+.story-body p {
+  margin: 0 0 0.5rem 0;
+  text-indent: 1em;
+}
+
+.story-body p:first-child {
+  text-indent: 0;
+}
+
+/* CJK text */
+.desc-zh {
+  font-family: var(--font-cjk);
+}
+
+/* Album image */
+.album-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--color-rule);
+}
+
+/* Source badge */
+.source-badge {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+/* Archive list */
+.archive-list {
+  list-style: none;
+  padding: 0;
+}
+
+.archive-list li {
+  border-bottom: 1px solid var(--color-rule);
+  padding: 0.75rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.archive-list li a {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  color: var(--color-ink);
+  text-decoration: none;
+  font-size: 1.1rem;
+}
+
+.archive-list li a:hover {
+  text-decoration: underline;
+}
+
+.archive-date {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* Sources list in footer */
+.sources-footer {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-align: center;
+  border-top: 1px solid var(--color-rule);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}

@@ -1,0 +1,33 @@
+---
+import type { Album } from '../lib/parse-albums';
+
+interface Props {
+  album: Album;
+}
+
+const { album } = Astro.props;
+---
+
+<article class="album-story">
+  {album.image && (
+    <img src={album.image} alt={`${album.artist} — ${album.album}`} class="album-image" loading="lazy" style="margin-bottom:0.75rem;" />
+  )}
+  <div class="meta-tags">
+    {album.genre && <span class="meta-tag">{album.genre}</span>}
+    {album.year && <span class="meta-detail">{album.year}</span>}
+  </div>
+  <h3 class="headline headline-story">{album.artist}</h3>
+  <p class="subheadline">{album.album}</p>
+  <div class="story-body">
+    <p class="desc-en">{album.descriptionEn}</p>
+    <p class="desc-zh" style="display:none;">{album.descriptionZh}</p>
+  </div>
+  <div style="margin-top:0.5rem;">
+    <span class="source-badge">via {album.source}</span>
+  </div>
+  {album.postUrl && (
+    <a href={album.postUrl} target="_blank" rel="noopener" style="font-size:0.75rem;color:var(--color-muted);margin-top:0.25rem;display:inline-block;">
+      View post &rarr;
+    </a>
+  )}
+</article>

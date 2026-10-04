@@ -1,0 +1,35 @@
+# Dependencies
+site/node_modules/
+
+# Build output
+site/dist/
+site/.astro/
+
+# Cloudflare
+site/.wrangler/
+
+# Raw scraping data (regeneratable from sources; screenshots are large)
+data/raw/*/
+data/raw/*-apify.json
+data/raw/*-apify-new.json
+
+# Debug artifacts
+data/debug_*
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# SQLite WAL/SHM sidecars (the .db file itself IS committed — small at our scale,
+# gives full provenance after a fresh clone)
+data/dig.db-wal
+data/dig.db-shm

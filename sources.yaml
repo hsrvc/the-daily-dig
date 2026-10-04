@@ -1,0 +1,45 @@
+# Music Digging Pipeline — Sources Configuration
+# Add new Facebook pages/groups here. All scripts read from this file.
+
+facebook_pages:
+  - name: UOU Records
+    slug: uourecords
+    url: https://www.facebook.com/uourecords
+    type: vinyl_shop
+    location: Taiwan
+    notes: Indie, jazz, electronic. Great taste in reissues.
+    posting_style: occasional_batch  # round-up posts of 3-4 mixed items (albums + zines + cassettes)
+
+  - name: Tokyo Buy Buy Diary
+    slug: Tokyobuybuydiary
+    url: https://www.facebook.com/Tokyobuybuydiary
+    type: vinyl_shop
+    location: Tokyo, Japan
+    notes: Deep digs — afrobeat, funk, jazz, world music.
+    posting_style: single  # one album per post, rich descriptions
+
+  - name: Beethobear Records
+    slug: beethobearrecords
+    url: https://www.facebook.com/beethobearrecords
+    type: vinyl_shop
+    location: Taiwan
+    notes: Colored vinyl, jazz, indie, shoegaze.
+    posting_style: regular_batch  # frequently 2 albums per post
+
+  - name: THT Records
+    slug: THTRECORDs
+    url: https://www.facebook.com/THTRECORDs
+    type: vinyl_shop
+    location: Taipei, Taiwan
+    notes: Hip-hop, pop, wide range. Physical shop in Taipei.
+    posting_style: regular_batch  # frequently 2 albums per post
+
+# posting_style values:
+#   single            — 1 album per post (default assumption)
+#   regular_batch     — often 2 albums in one post
+#   occasional_batch  — sometimes 3-4 items, may include non-album things (zines, cassettes, merch) to skip
+
+# To add a new source:
+# 1. Add an entry above with name, slug (FB page ID), url, type, location
+# 2. Run the scraper — it picks up new sources automatically
+# 3. The website will show the new source in the next digest

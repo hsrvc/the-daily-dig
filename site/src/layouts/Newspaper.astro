@@ -1,0 +1,83 @@
+---
+import '../styles/global.css';
+import '../styles/newspaper.css';
+
+interface Props {
+  title?: string;
+  date?: Date;
+}
+
+const { title = 'The Daily Dig', date } = Astro.props;
+
+const formatDate = (d: Date) =>
+  d.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="cd5cdd07-1eca-4a7f-b2dc-4bb517a8ac86"></script>
+  </head>
+  <body>
+    <div class="max-w-5xl mx-auto px-4 py-8">
+      <header class="masthead" style="position:relative;">
+        <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()" style="position:absolute;top:0.75rem;right:0;">
+          中文
+        </button>
+        <h1><a href="/" style="color:inherit;text-decoration:none;">The Daily Dig</a></h1>
+        <p class="dateline">
+          {date ? formatDate(date) : 'A Daily Music Digest'}
+          &nbsp;&bull;&nbsp; Vinyl Finds from Around the World
+        </p>
+      </header>
+
+      <main>
+        <slot />
+      </main>
+
+      <footer class="sources-footer">
+        <p>&copy; {new Date().getFullYear()} The Daily Dig &bull; A curated vinyl record digest</p>
+      </footer>
+    </div>
+
+    <script is:inline>
+      function toggleLang() {
+        const btn = document.getElementById('lang-toggle');
+        const enEls = document.querySelectorAll('.desc-en');
+        const zhEls = document.querySelectorAll('.desc-zh');
+        const isEn = enEls[0]?.style.display !== 'none';
+
+        enEls.forEach(el => el.style.display = isEn ? 'none' : '');
+        zhEls.forEach(el => el.style.display = isEn ? '' : 'none');
+        btn.textContent = isEn ? 'English' : '中文';
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .lang-toggle {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid #333;
+    background: transparent;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+  .lang-toggle:hover {
+    background: #333;
+    color: #f5f0e8;
+  }
+</style>

@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import Newspaper from '../layouts/Newspaper.astro';
+
+const digests = (await getCollection('digests')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+---
+
+<Newspaper title="Archive — The Daily Dig">
+  <h2 class="headline headline-hero" style="margin-bottom:1rem;">Archive</h2>
+  <hr class="section-rule-thick" />
+  {digests.length === 0 ? (
+    <p class="story-body">No digests published yet.</p>
+  ) : (
+    <ul class="archive-list">
+      {digests.map((digest) => {
+        const d = new Date(digest.data.date);
+        const dateStr = d.toISOString().split('T')[0];
+        const picks = (digest.body?.match(/^## /gm) ?? []).length;
+        return (
+          <li>
+            <a href={`/digest/${dateStr}`}>{digest.data.title} &mdash; {dateStr}</a>
+            <span class="archive-date">{picks} pick{picks !== 1 ? 's' : ''}</span>
+          </li>
+        );
+      })}
+    </ul>
+  )}
+</Newspaper>

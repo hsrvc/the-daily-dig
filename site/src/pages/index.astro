@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import Newspaper from '../layouts/Newspaper.astro';
+import AlbumHero from '../components/AlbumHero.astro';
+import AlbumStory from '../components/AlbumStory.astro';
+import { parseAlbums } from '../lib/parse-albums';
+import { pickHero } from '../lib/score-hero';
+
+const digests = (await getCollection('digests')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const latest = digests[0];
+const albums = latest ? parseAlbums(latest.body ?? '') : [];
+const { hero: heroAlbum, rest } = pickHero(albums);
+---
+
+<Newspaper title="The Daily Dig" date={latest?.data.date}>
+  {!latest ? (
+    <p class="story-body">No digests published yet.</p>
+  ) : (
+    <>
+      {heroAlbum && <AlbumHero album={heroAlbum} />}
+
+      <hr class="section-rule" />
+
+      {rest.length > 0 && (
+        <div class="album-grid">
+          {rest.map((album) => (
+            <AlbumStory album={album} />
+          ))}
+        </div>
+      )}
+
+      <hr class="section-rule" style="margin-bottom:1rem;" />
+
+      <footer style="margin-bottom:0;font-family:var(--font-body);font-size:0.75rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+        <span style="color:var(--color-ink);flex:1;">
+          Sources: {latest.data.sources.map((s: string, i: number) => (
+            <>{i > 0 && ', '}<strong>{s}</strong></>
+          ))}
+        </span>
+<nav style="letter-spacing:0.1em;text-transform:uppercase;color:var(--color-ink);flex:1;text-align:right;">
+          <a href="/archive" style="color:var(--color-ink);text-decoration:none;">Full Archive</a>
+          <span style="margin:0 0.75rem;opacity:0.4;">|</span>
+          <a href="https://open.spotify.com/playlist/3J1jTOlZl8pApDfh4QRXv0" target="_blank" rel="noopener" style="color:var(--color-ink);text-decoration:none;">Listen on Spotify</a>
+        </nav>
+      </footer>
+    </>
+  )}
+</Newspaper>
